@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@hotelhaven-database.n0h5vlk.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -55,6 +55,15 @@ app.post("/carts", async (req, res) => {
   const result = await cartCollection.insertOne(cartItem);
   res.send(result);
 });
+
+
+// delete 
+app.delete('/carts/:id',async(req,res)=>{
+  const id =req.params.id;
+  const query= { _id: new ObjectId(id)}
+  const result =await cartCollection.deleteOne(query);
+  res.send(result)
+})
 // get user wise carts
 app.get("/carts", async (req, res) => {
   const email=req.query.email;
@@ -62,6 +71,8 @@ app.get("/carts", async (req, res) => {
   const result = await cartCollection.find(query).toArray();
   res.send(result);
 });
+
+
 
 app.get("/", (req, res) => {
   res.send("boss is sitting");
