@@ -52,7 +52,7 @@ app.post("/jwt", async (req, res) => {
 
 // verify token
 const varifyToken = (req, res, next) => {
-  console.log("inside verify token", req.headers.authorization);
+  // console.log("inside verify token", req.headers.authorization);
   if (!req.headers.authorization) {
     return res.status(401).send({ message: "forbidden access" });
   }
@@ -66,11 +66,25 @@ const varifyToken = (req, res, next) => {
   });
   // next();
 };
+
+// varify admin use verify after varify token
+const varifyAdmin =async(req,res,next)=>{
+  const email=req.decoded.email;
+  const query={email:email};
+  const user =await userCollection.findOne(query);
+  const isAdmin=user?.role === 'admin';
+  if(!isAdmin){
+    return res.status(403).send({message: 'forbidden access'})
+  }
+  next()
+}
+
+
 // user relate api
 
 app.get("/users/admin/:email", varifyToken, async (req, res) => {
   const email = req.params.email;
-  console.log('email',req.params.email,req.decoded.email)
+  // console.log("email", req.params.email, req.decoded.email);
   if (email !== req.decoded.email) {
     return res.status(403).send({ message: "unauthorized access" });
   }
@@ -85,8 +99,8 @@ app.get("/users/admin/:email", varifyToken, async (req, res) => {
 });
 
 // get the user
-app.get("/users", varifyToken, async (req, res) => {
-  console.log(req.headers);
+app.get("/users", varifyToken,varifyAdmin, async (req, res) => {
+  // console.log(req.headers);
   const result = await userCollection.find().toArray();
   res.send(result);
 });
@@ -108,7 +122,7 @@ app.post("/users", async (req, res) => {
   res.send(result);
 });
 
-app.patch("/users/admin/:id", async (req, res) => {
+app.patch("/users/admin/:id",varifyToken,varifyAdmin, async (req, res) => {
   const id = req.params.id;
   const filter = { _id: new ObjectId(id) };
   const updatedDoc = {
